@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: rimovies-api-prod
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env.prod
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: rimovies-db
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - rimovies_pgdata:/var/lib/postgresql/data
+
+volumes:
+  rimovies_pgdata:

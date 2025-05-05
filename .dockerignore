@@ -1,0 +1,19 @@
+# Dependencias
+
+node_modules
+pnpm-lock.yaml
+
+# Archivos de entorno y configuración local
+
+.env
+.env.\*.local
+
+# Salidas de compilación
+
+dist
+coverage
+
+# Otros
+
+Dockerfile.local
+\*.log
