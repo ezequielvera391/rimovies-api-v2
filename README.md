@@ -1,12 +1,32 @@
 # Rimovies API
 
-Proyecto backend para Rimovies, una API construida en TypeScript con NestJS y PostgreSQL.
+Proyecto backend para Rimovies, una API construida en TypeScript con NestJS, PostgreSQL y TypeORM.
+
+## 🔗 Tabla de contenido
+
+- [Requisitos](#requisitos)
+- [Stack tecnológico](#stack-tecnológico)
+- [Instalación local](#instalación-local)
+- [Modo desarrollo](#modo-desarrollo)
+- [Dockerización](#dockerización)
+- [Estructura del entorno](#estructura-del-entorno)
+- [Scripts útiles](#scripts-útiles)
+- [Migraciones de base de datos](#migraciones-de-base-de-datos)
+- [Enlaces de interés](#enlaces-de-interés)
+
+---
 
 ## Requisitos
 
 - Node.js 20+
 - PNPM
 - Docker y Docker Compose
+
+## Stack tecnológico
+
+- **NestJS** como framework principal
+- **TypeORM** para manejo de base de datos
+- **PostgreSQL** como motor de base de datos relacional
 
 ## Instalación local
 
@@ -63,7 +83,6 @@ rimovies-api/
 ├── Dockerfile.prod         # Build y ejecución para producción
 ├── pnpm-lock.yaml
 └── ...
-
 ```
 
 ## Scripts útiles
@@ -74,24 +93,31 @@ pnpm build         # Compilar a dist/
 pnpm start         # Ejecutar dist/ en local
 ```
 
-# Rimovies API
+## Migraciones de base de datos
 
-Proyecto backend para Rimovies, una API construida en TypeScript con NestJS, PostgreSQL y TypeORM.
-
-## Requisitos
-
-- Node.js 20+
-- PNPM
-- Docker y Docker Compose
-
-## Stack tecnológico
-
-- **NestJS** como framework principal
-- **TypeORM** para manejo de base de datos
-- **PostgreSQL** como motor de base de datos relacional
-
-## Instalación local
+### Generar migración
 
 ```bash
-pnpm install
+pnpm migration:generate
 ```
+
+> Esto genera una nueva migración a partir del estado actual de tus entidades TypeORM.
+
+### Ejecutar migraciones
+
+```bash
+pnpm migration:run
+```
+
+### Revertir última migración (opcional)
+
+```bash
+pnpm migration:revert
+```
+
+## Enlaces de interés
+
+- [NestJS](https://nestjs.com/)
+- [TypeORM](https://typeorm.io/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Docker](https://www.docker.com/)
