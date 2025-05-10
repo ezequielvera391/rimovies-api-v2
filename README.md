@@ -50,6 +50,14 @@ DB_NAME=rimovies
 
 # API
 PORT=3000
+
+# Environment
+NODE_ENV=development
+DEV_SECRET=your_secure_dev_secret
+
+# JWT
+JWT_SECRET=your_super_secret_key_here
+JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
 ```
 
 ## Modo desarrollo
@@ -113,6 +121,45 @@ rimovies-api/
 ```
 
 ## Endpoints disponibles
+
+### Autenticación
+
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "password123"
+}
+```
+
+Respuesta exitosa (200):
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+        "id": 1,
+        "email": "user@example.com",
+        "username": "testuser",
+        "role": "user"
+    }
+}
+```
+
+#### Logout
+```http
+POST /auth/logout
+Authorization: Bearer <token>
+```
+
+Respuesta exitosa (204):
+- No content
+
+> **Nota**: 
+> - El access token expira después de 24 horas
+> - Cuando el token expire, el usuario deberá volver a iniciar sesión
 
 ### Usuarios
 
