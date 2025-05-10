@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmOptions } from './database/typeorm.options';
 import { UserModule } from './user/user.module';
 import { DataSource } from 'typeorm';
+import { AuthModule } from './auth/auth.module';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -17,7 +19,9 @@ import { DataSource } from 'typeorm';
       retryAttempts: 3,
       retryDelay: 3000,
     }),
+    CacheModule,
     UserModule,
+    AuthModule,
   ],
 })
 export class AppModule implements OnModuleInit {
