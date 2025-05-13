@@ -14,11 +14,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('No token provided');
+      throw new UnauthorizedException('No token provided. Please login to access this resource.');
     }
 
     if (await this.authService.isTokenInvalid(token)) {
-      throw new UnauthorizedException('Token has been invalidated');
+      throw new UnauthorizedException('This session has been invalidated. Please login again.');
     }
 
     const result = await super.canActivate(context);
