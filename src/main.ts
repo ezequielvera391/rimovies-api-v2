@@ -9,6 +9,8 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log'],
       bufferLogs: true,
     });
+    // TODO: Add personalization of cors
+    app.enableCors();
 
     await app.listen(3000);
     logger.log('🚀 Application is running on: http://localhost:3000');
