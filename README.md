@@ -122,6 +122,20 @@ rimovies-api/
 
 ## Endpoints disponibles
 
+### Salud del sistema
+
+#### Ping
+```http
+GET /ping
+```
+Respuesta exitosa (200):
+```json
+{
+    "message": "pong",
+    "timestamp": "2024-06-08T15:30:00.000Z"
+}
+```
+
 ### Autenticación
 
 #### Login

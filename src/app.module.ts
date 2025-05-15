@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { DataSource } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from './cache/cache.module';
+import { PingController } from './common/ping.controller';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CacheModule } from './cache/cache.module';
     UserModule,
     AuthModule,
   ],
+  controllers: [PingController],
 })
 export class AppModule implements OnModuleInit {
   private readonly logger = new Logger(AppModule.name);
