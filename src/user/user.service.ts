@@ -2,8 +2,9 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { CreateUserDto } from './dto/user.dto';
 import { hashPassword } from './utils/password.utils';
-import { IUser, ICreateUser, IUserService } from './interfaces/user.interface';
+import { IUser, IUserService } from './interfaces/user.interface';
 
 @Injectable()
 export class UserService implements IUserService {
@@ -32,7 +33,7 @@ export class UserService implements IUserService {
     return user;
   }
 
-  async createUser(createUserDto: ICreateUser): Promise<IUser> {
+  async createUser(createUserDto: CreateUserDto): Promise<IUser> {
     const { email, username, password } = createUserDto;
 
     const existingUser = await this.userRepository.findOne({

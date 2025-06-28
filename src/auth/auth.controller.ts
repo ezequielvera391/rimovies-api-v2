@@ -15,6 +15,11 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Request } from 'express';
+import { JwtUser } from './interfaces/jwt.interface';
+
+interface AuthenticatedRequest extends Request {
+  user: JwtUser;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -30,9 +35,9 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ): Promise<AuthResponseDto> {
-    const userId = req.user['sub'];
+    const userId = req.user.id;
     return this.authService.refreshTokens(userId, refreshTokenDto.refresh_token);
   }
 
@@ -47,8 +52,8 @@ export class AuthController {
   @Post('logout-all')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logoutAll(@Req() req: Request): Promise<void> {
-    const userId = req.user['sub'];
+  async logoutAll(@Req() req: AuthenticatedRequest): Promise<void> {
+    const userId = req.user.id;
     await this.authService.logoutAll(userId);
   }
 }

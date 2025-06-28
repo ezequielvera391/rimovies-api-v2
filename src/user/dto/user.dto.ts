@@ -10,3 +10,8 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 }
+
+export class GetUserByEmailDto {
+  @IsEmail()
+  email: string;
+}

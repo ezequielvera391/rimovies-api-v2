@@ -1,4 +1,5 @@
 import { UserRole } from '../../common/enums/user-role.enum';
+import { CreateUserDto } from '../dto/user.dto';
 
 // User entity interface
 export interface IUser {
@@ -30,5 +31,5 @@ export interface IUpdateUser {
 export interface IUserService {
   getUserByEmail(email: string): Promise<IUser>;
   getUserById(id: number): Promise<IUser>;
-  createUser(createUserDto: ICreateUser): Promise<IUser>;
+  createUser(createUserDto: CreateUserDto): Promise<IUser>;
 }
