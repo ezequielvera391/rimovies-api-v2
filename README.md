@@ -58,6 +58,7 @@ DEV_SECRET=your_secure_dev_secret
 # JWT
 JWT_SECRET=your_super_secret_key_here
 JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+JWT_EXPIRES_IN=15m
 ```
 
 ## Modo desarrollo
@@ -153,6 +154,31 @@ Respuesta exitosa (200):
 ```json
 {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+        "id": 1,
+        "email": "user@example.com",
+        "username": "testuser",
+        "role": "user"
+    }
+}
+```
+
+#### Refresh Token
+```http
+POST /auth/refresh
+Content-Type: application/json
+
+{
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Respuesta exitosa (200):
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
         "id": 1,
         "email": "user@example.com",
@@ -165,15 +191,26 @@ Respuesta exitosa (200):
 #### Logout
 ```http
 POST /auth/logout
-Authorization: Bearer <token>
+Authorization: Bearer <access_token>
+```
+
+Respuesta exitosa (204):
+- No content
+
+#### Logout All Sessions
+```http
+POST /auth/logout-all
+Authorization: Bearer <access_token>
 ```
 
 Respuesta exitosa (204):
 - No content
 
 > **Nota**: 
-> - El access token expira después de 24 horas
-> - Cuando el token expire, el usuario deberá volver a iniciar sesión
+> - El access token expira después de 15 minutos
+> - El refresh token expira después de 7 días
+> - Cuando el access token expire, usa el refresh token para obtener nuevos tokens
+> - El sistema mantiene un máximo de 5 refresh tokens activos por usuario
 
 ### Usuarios
 

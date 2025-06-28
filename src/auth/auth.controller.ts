@@ -1,8 +1,20 @@
-import { Body, Controller, Post, UseGuards, HttpCode, HttpStatus, Headers } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Headers,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -14,11 +26,29 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  @Post('refresh')
+  @UseGuards(RefreshTokenGuard)
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Req() req: Request,
+  ): Promise<AuthResponseDto> {
+    const userId = req.user['sub'];
+    return this.authService.refreshTokens(userId, refreshTokenDto.refresh_token);
+  }
+
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Headers('authorization') auth: string): Promise<void> {
     const token = auth.split(' ')[1];
     await this.authService.logout(token);
+  }
+
+  @Post('logout-all')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logoutAll(@Req() req: Request): Promise<void> {
+    const userId = req.user['sub'];
+    await this.authService.logoutAll(userId);
   }
 }
