@@ -7,6 +7,8 @@ import {
   HttpStatus,
   Headers,
   Req,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -27,12 +29,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.authService.validateUser(loginDto.email, loginDto.password);
     return this.authService.login(user);
   }
 
   @Post('register')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
     const user = await this.authService.register(registerDto);
     return this.authService.login(user);
