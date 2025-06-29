@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -12,8 +13,20 @@ async function bootstrap() {
     // TODO: Add personalization of cors
     app.enableCors();
 
+    // Swagger configuration
+    const config = new DocumentBuilder()
+      .setTitle('RiMovies API')
+      .setDescription('API for RiMovies application')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+
     await app.listen(3000);
     logger.log('🚀 Application is running on: http://localhost:3000');
+    logger.log('📚 Swagger documentation available at: http://localhost:3000/api');
   } catch (error) {
     if (error.code === 'EADDRINUSE') {
       logger.error(

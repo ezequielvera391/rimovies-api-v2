@@ -33,6 +33,8 @@ export class AuthService implements IAuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 
@@ -44,6 +46,8 @@ export class AuthService implements IAuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 
@@ -72,6 +76,8 @@ export class AuthService implements IAuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
 
     const newAccessToken = await this.generateAccessToken(userDto);
