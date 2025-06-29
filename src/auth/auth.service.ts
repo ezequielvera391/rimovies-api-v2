@@ -4,12 +4,14 @@ import { UserService } from '../user/user.service';
 import { comparePassword } from '../user/utils/password.utils';
 import { UserResponseDto } from '../common/dto/user-response.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
 import { CacheService } from '../cache/cache.service';
 import { JwtPayload } from './interfaces/jwt.interface';
+import { IAuthService } from './interfaces/auth-service.interface';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements IAuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -25,6 +27,17 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    };
+  }
+
+  async register(registerDto: RegisterDto): Promise<UserResponseDto> {
+    const user = await this.userService.createUser(registerDto);
 
     return {
       id: user.id,
