@@ -118,21 +118,40 @@ docker compose -f docker-compose.prod.yml up --build
 ```
 rimovies-api/
 ├── src/
-│   ├── common/              # Utilidades y configuraciones comunes
-│   │   ├── enums/          # Enumeraciones
-│   │   └── utils/          # Utilidades generales
-│   ├── database/           # Configuración de base de datos
-│   │   ├── migrations/     # Migraciones de TypeORM
-│   │   └── scripts/        # Scripts de base de datos
-│   ├── user/               # Módulo de usuarios
-│   │   ├── dto/           # Data Transfer Objects
-│   │   ├── entities/      # Entidades TypeORM
-│   │   └── utils/         # Utilidades específicas
-│   ├── app.module.ts      # Módulo principal
-│   └── main.ts            # Punto de entrada
-├── test/                  # Tests
-├── .env                   # Variables de entorno
-├── docker-compose.yml     # Configuración Docker (desarrollo)
+│   ├── auth/               # Módulo de autenticación
+│   │   ├── dto/           # Data Transfer Objects para auth
+│   │   ├── entities/      # Entidades de tokens (AccessToken, RefreshToken)
+│   │   ├── guards/        # Guards de autenticación (JWT, RefreshToken)
+│   │   ├── strategies/    # Estrategias de Passport (JWT, RefreshToken)
+│   │   ├── services/      # Servicios de autenticación
+│   │   ├── decorators/    # Decoradores personalizados
+│   │   ├── interfaces/    # Interfaces de autenticación
+│   │   └── types/         # Tipos específicos de auth
+│   ├── common/            # Utilidades y configuraciones comunes
+│   │   ├── dto/          # DTOs comunes
+│   │   ├── enums/        # Enumeraciones
+│   │   └── guards/       # Guards comunes
+│   ├── config/           # Configuraciones del sistema
+│   │   └── env.utils.ts  # Utilidades de variables de entorno
+│   ├── database/         # Configuración de base de datos
+│   │   ├── migrations/   # Migraciones de TypeORM
+│   │   └── typeorm.options.ts
+│   ├── interfaces/       # Interfaces globales
+│   ├── movie/           # Módulo de películas (en desarrollo)
+│   │   └── dto/         # DTOs de películas
+│   ├── scripts/         # Scripts de utilidad
+│   │   ├── migrate.ts   # Script de migración
+│   │   └── test-db-connection.ts
+│   ├── user/            # Módulo de usuarios
+│   │   ├── dto/         # Data Transfer Objects
+│   │   ├── entities/    # Entidades TypeORM
+│   │   ├── interfaces/  # Interfaces de usuario
+│   │   └── utils/       # Utilidades específicas
+│   ├── app.module.ts    # Módulo principal
+│   └── main.ts          # Punto de entrada
+├── test/                # Tests
+├── .env                 # Variables de entorno
+├── docker-compose.yml   # Configuración Docker (desarrollo)
 └── docker-compose.prod.yml # Configuración Docker (producción)
 ```
 
