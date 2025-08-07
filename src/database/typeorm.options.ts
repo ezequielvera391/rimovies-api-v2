@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 config();
 import { DataSourceOptions } from 'typeorm';
 import { User } from '../user/entities/user.entity';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { AccessToken } from '../auth/entities/access-token.entity';
 
 console.log('Database Configuration:', {
   host: process.env.DB_HOST,
@@ -18,7 +20,7 @@ export const typeOrmOptions: DataSourceOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   synchronize: false,
-  entities: [User],
+  entities: [User, RefreshToken, AccessToken],
   migrations: ['dist/database/migrations/*.js'],
   migrationsRun: true,
   logging: true,

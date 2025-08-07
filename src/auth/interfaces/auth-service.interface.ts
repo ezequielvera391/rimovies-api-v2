@@ -17,8 +17,9 @@ export interface IAuthService {
   validateUser(email: string, password: string): Promise<JwtUser>;
   register(registerDto: RegisterDto): Promise<JwtUser>;
   login(user: JwtUser): Promise<TokenPair & { user: JwtUser }>;
-  refreshTokens(userId: number, refreshToken: string): Promise<TokenPair & { user: JwtUser }>;
+  refreshTokens(refreshToken: string): Promise<TokenPair & { user: JwtUser }>;
   logout(token: string): Promise<void>;
   logoutAll(userId: number): Promise<void>;
-  isTokenInvalid(token: string): Promise<boolean>;
+  isTokenRevoked(token: string): Promise<boolean>;
+  cleanupExpiredTokens(): Promise<void>;
 }

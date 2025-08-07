@@ -17,7 +17,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('No token provided. Please login to access this resource.');
     }
 
-    if (await this.authService.isTokenInvalid(token)) {
+    if (await this.authService.isTokenRevoked(token)) {
       throw new UnauthorizedException('This session has been invalidated. Please login again.');
     }
 

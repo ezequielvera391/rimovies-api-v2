@@ -3,8 +3,9 @@ export interface JwtPayload {
   sub: number;
   email: string;
   role: string;
-  iat: number;
-  exp: number;
+  jti?: string;
+  iat?: number;
+  exp?: number;
 }
 
 export interface JwtUser {

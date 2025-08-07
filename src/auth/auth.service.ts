@@ -6,9 +6,9 @@ import { UserResponseDto } from '../common/dto/user-response.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
-import { CacheService } from '../cache/cache.service';
 import { JwtPayload } from './interfaces/jwt.interface';
 import { IAuthService } from './interfaces/auth-service.interface';
+import { TokenService } from './services/token.service';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -16,7 +16,7 @@ export class AuthService implements IAuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly cacheService: CacheService,
+    private readonly tokenService: TokenService,
     @Inject('JWT_REFRESH_SECRET') private readonly jwtRefreshSecret: string,
   ) {}
 
@@ -51,26 +51,37 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async login(user: UserResponseDto): Promise<AuthResponseDto> {
-    const access_token = await this.generateAccessToken(user);
-    const refresh_token = await this.generateRefreshToken(user);
+  async login(user: UserResponseDto): Promise<AuthResponseDto & { refresh_token: string }> {
+    const jti = this.tokenService.generateJti();
+    const accessToken = await this.generateAccessToken(user, jti);
+    const refreshToken = await this.generateRefreshToken(user);
 
-    await this.storeRefreshToken(user.id, refresh_token);
+    // Calcular fechas de expiración
+    const accessTokenExpiresAt = new Date();
+    accessTokenExpiresAt.setMinutes(accessTokenExpiresAt.getMinutes() + 15);
+
+    const refreshTokenExpiresAt = new Date();
+    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
+
+    // Guardar tokens en la base de datos
+    await this.tokenService.createAccessToken(user.id, accessToken, jti, accessTokenExpiresAt);
+    await this.tokenService.createRefreshToken(user.id, refreshToken, refreshTokenExpiresAt);
 
     return {
-      access_token,
-      refresh_token,
+      access_token: accessToken,
+      refresh_token: refreshToken,
       user,
     };
   }
 
-  async refreshTokens(userId: number, refreshToken: string): Promise<AuthResponseDto> {
-    const isValid = await this.validateRefreshToken(userId, refreshToken);
-    if (!isValid) {
+  async refreshTokens(refreshToken: string): Promise<AuthResponseDto & { refresh_token: string }> {
+    // Verificar que el refresh token existe y no está revocado
+    const tokenRecord = await this.tokenService.findRefreshToken(refreshToken);
+    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const user = await this.userService.getUserById(userId);
+    const user = await this.userService.getUserById(tokenRecord.userId);
     const userDto: UserResponseDto = {
       id: user.id,
       email: user.email,
@@ -80,11 +91,29 @@ export class AuthService implements IAuthService {
       updatedAt: user.updatedAt,
     };
 
-    const newAccessToken = await this.generateAccessToken(userDto);
+    // Generar nuevos tokens
+    const newJti = this.tokenService.generateJti();
+    const newAccessToken = await this.generateAccessToken(userDto, newJti);
     const newRefreshToken = await this.generateRefreshToken(userDto);
 
-    await this.invalidateRefreshToken(userId, refreshToken);
-    await this.storeRefreshToken(userId, newRefreshToken);
+    // Calcular fechas de expiración
+    const accessTokenExpiresAt = new Date();
+    accessTokenExpiresAt.setMinutes(accessTokenExpiresAt.getMinutes() + 15);
+
+    const refreshTokenExpiresAt = new Date();
+    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
+
+    // Revocar el refresh token anterior
+    await this.tokenService.revokeRefreshToken(refreshToken);
+
+    // Guardar los nuevos tokens
+    await this.tokenService.createAccessToken(
+      userDto.id,
+      newAccessToken,
+      newJti,
+      accessTokenExpiresAt,
+    );
+    await this.tokenService.createRefreshToken(userDto.id, newRefreshToken, refreshTokenExpiresAt);
 
     return {
       access_token: newAccessToken,
@@ -93,33 +122,38 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async logout(token: string): Promise<void> {
+  async logout(accessToken: string): Promise<void> {
     try {
-      const decoded = this.jwtService.decode(token);
-      const ttl = decoded.exp - Math.floor(Date.now() / 1000);
-
-      if (ttl > 0) {
-        await this.cacheService.set(`invalid_token:${token}`, true, ttl);
+      // Decodificar el token para obtener el jti
+      const decoded = this.jwtService.decode(accessToken);
+      if (decoded && decoded.jti) {
+        await this.tokenService.revokeAccessTokenByJti(decoded.jti);
       }
     } catch (error) {
       // Si el token no es válido, no necesitamos hacer nada
-      console.error(error);
+      console.error('Error decoding token during logout:', error);
     }
   }
 
   async logoutAll(userId: number): Promise<void> {
-    await this.cacheService.del(`refresh_tokens:${userId}`);
+    await this.tokenService.revokeAllUserTokens(userId);
   }
 
-  async isTokenInvalid(token: string): Promise<boolean> {
-    return !!(await this.cacheService.get(`invalid_token:${token}`));
+  async isTokenRevoked(token: string): Promise<boolean> {
+    const tokenRecord = await this.tokenService.findAccessToken(token);
+    return !tokenRecord || tokenRecord.isRevoked;
   }
 
-  private async generateAccessToken(user: UserResponseDto): Promise<string> {
-    const payload: Omit<JwtPayload, 'iat' | 'exp'> = {
+  async cleanupExpiredTokens(): Promise<void> {
+    await this.tokenService.cleanupExpiredTokens();
+  }
+
+  private async generateAccessToken(user: UserResponseDto, jti: string): Promise<string> {
+    const payload: JwtPayload = {
       email: user.email,
       sub: user.id,
       role: user.role,
+      jti,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_SECRET'),
@@ -128,7 +162,7 @@ export class AuthService implements IAuthService {
   }
 
   private async generateRefreshToken(user: UserResponseDto): Promise<string> {
-    const payload: Omit<JwtPayload, 'iat' | 'exp'> = {
+    const payload: Omit<JwtPayload, 'jti'> = {
       email: user.email,
       sub: user.id,
       role: user.role,
@@ -137,37 +171,5 @@ export class AuthService implements IAuthService {
       secret: this.jwtRefreshSecret,
       expiresIn: '7d',
     });
-  }
-
-  private async storeRefreshToken(userId: number, refreshToken: string): Promise<void> {
-    const key = `refresh_tokens:${userId}`;
-    const tokens = (await this.cacheService.get<string[]>(key)) || [];
-    tokens.push(refreshToken);
-    // Mantengo solo los últimos 5 tokens para seguridad
-    if (tokens.length > 5) {
-      tokens.splice(0, tokens.length - 5);
-    }
-
-    await this.cacheService.set(key, tokens, 7 * 24 * 60 * 60);
-  }
-
-  private async validateRefreshToken(userId: number, refreshToken: string): Promise<boolean> {
-    try {
-      const key = `refresh_tokens:${userId}`;
-      const tokens = (await this.cacheService.get<string[]>(key)) || [];
-
-      return tokens.includes(refreshToken);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      return false;
-    }
-  }
-
-  private async invalidateRefreshToken(userId: number, refreshToken: string): Promise<void> {
-    const key = `refresh_tokens:${userId}`;
-    const tokens = (await this.cacheService.get<string[]>(key)) || [];
-    const filteredTokens = tokens.filter((token) => token !== refreshToken);
-
-    await this.cacheService.set(key, filteredTokens, 7 * 24 * 60 * 60);
   }
 }

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -12,6 +13,9 @@ async function bootstrap() {
     });
     // TODO: Add personalization of cors
     app.enableCors();
+
+    // Configurar cookie parser
+    app.use(cookieParser());
 
     // Swagger configuration
     const config = new DocumentBuilder()

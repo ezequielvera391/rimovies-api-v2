@@ -7,8 +7,10 @@ import {
   HttpStatus,
   Headers,
   Req,
+  Res,
   UsePipes,
   ValidationPipe,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -18,7 +20,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { JwtUser } from './interfaces/jwt.interface';
 
 interface AuthenticatedRequest extends Request {
@@ -42,9 +44,24 @@ export class AuthController {
     status: 401,
     description: 'Invalid credentials',
   })
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
     const user = await this.authService.validateUser(loginDto.email, loginDto.password);
-    return this.authService.login(user);
+    const result = await this.authService.login(user);
+
+    // Establecer cookie HTTP-only para el refresh token
+    res.cookie('refreshToken', result.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    // No enviar el refresh token en el body
+    const { refresh_token, ...response } = result;
+    return response as AuthResponseDto;
   }
 
   @Post('register')
@@ -59,14 +76,27 @@ export class AuthController {
     status: 400,
     description: 'Invalid input data or user already exists',
   })
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
     const user = await this.authService.register(registerDto);
-    return this.authService.login(user);
+    const result = await this.authService.login(user);
+
+    // Establecer cookie HTTP-only para el refresh token
+    res.cookie('refreshToken', result.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    // No enviar el refresh token en el body
+    const { refresh_token, ...response } = result;
+    return response as AuthResponseDto;
   }
 
   @Post('refresh')
-  @UseGuards(RefreshTokenGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({
     status: 200,
@@ -78,11 +108,28 @@ export class AuthController {
     description: 'Invalid refresh token',
   })
   async refresh(
-    @Body() refreshTokenDto: RefreshTokenDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const userId = req.user.id;
-    return this.authService.refreshTokens(userId, refreshTokenDto.refresh_token);
+    const refreshToken = req.cookies?.refreshToken;
+    
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const result = await this.authService.refreshTokens(refreshToken);
+
+    // Establecer el nuevo refresh token como cookie
+    res.cookie('refreshToken', result.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    // No enviar el refresh token en el body
+    const { refresh_token, ...response } = result;
+    return response as AuthResponseDto;
   }
 
   @Post('logout')
@@ -98,9 +145,21 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized',
   })
-  async logout(@Headers('authorization') auth: string): Promise<void> {
+  async logout(
+    @Headers('authorization') auth: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     const token = auth.split(' ')[1];
     await this.authService.logout(token);
+
+    // Limpiar la cookie del refresh token
+    res.cookie('refreshToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+    });
   }
 
   @Post('logout-all')
