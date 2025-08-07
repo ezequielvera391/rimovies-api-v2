@@ -5,7 +5,7 @@ import { typeOrmOptions } from './database/typeorm.options';
 import { UserModule } from './user/user.module';
 import { DataSource } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
-import { CacheModule } from './cache/cache.module';
+
 import { PingController } from './common/ping.controller';
 
 @Module({
@@ -20,7 +20,7 @@ import { PingController } from './common/ping.controller';
       retryAttempts: 3,
       retryDelay: 3000,
     }),
-    CacheModule,
+
     UserModule,
     AuthModule,
   ],
