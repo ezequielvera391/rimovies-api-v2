@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
@@ -11,11 +11,24 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log'],
       bufferLogs: true,
     });
+    
     // TODO: Add personalization of cors
     app.enableCors();
 
     // Configurar cookie parser
     app.use(cookieParser());
+
+    // Configurar validación global
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    );
 
     // Swagger configuration
     const config = new DocumentBuilder()

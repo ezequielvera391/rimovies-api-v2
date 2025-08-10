@@ -16,10 +16,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { Request, Response } from 'express';
 import { JwtUser } from './interfaces/jwt.interface';
 
@@ -48,7 +46,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    const user = await this.authService.validateUser(loginDto.identifier, loginDto.password);
     const result = await this.authService.login(user);
 
     // Establecer cookie HTTP-only para el refresh token
@@ -60,6 +58,7 @@ export class AuthController {
     });
 
     // No enviar el refresh token en el body
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { refresh_token, ...response } = result;
     return response as AuthResponseDto;
   }
@@ -92,6 +91,7 @@ export class AuthController {
     });
 
     // No enviar el refresh token en el body
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { refresh_token, ...response } = result;
     return response as AuthResponseDto;
   }
@@ -112,7 +112,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const refreshToken = req.cookies?.refreshToken;
-    
+
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
@@ -128,6 +128,7 @@ export class AuthController {
     });
 
     // No enviar el refresh token en el body
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { refresh_token, ...response } = result;
     return response as AuthResponseDto;
   }

@@ -30,6 +30,7 @@ export interface IUpdateUser {
 // User service interfaces
 export interface IUserService {
   getUserByEmail(email: string): Promise<IUser>;
+  getUserByIdentifier(identifier: string): Promise<IUser>;
   getUserById(id: number): Promise<IUser>;
   createUser(createUserDto: CreateUserDto): Promise<IUser>;
 }

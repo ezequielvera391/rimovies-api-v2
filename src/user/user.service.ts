@@ -23,6 +23,18 @@ export class UserService implements IUserService {
     return user;
   }
 
+  async getUserByIdentifier(identifier: string): Promise<IUser> {
+    const user = await this.userRepository.findOne({
+      where: [{ email: identifier }, { username: identifier }],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with username or email ${identifier} not found`);
+    }
+
+    return user;
+  }
+
   async getUserById(id: number): Promise<IUser> {
     const user = await this.userRepository.findOneBy({ id });
 

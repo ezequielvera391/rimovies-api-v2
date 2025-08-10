@@ -20,8 +20,8 @@ export class AuthService implements IAuthService {
     @Inject('JWT_REFRESH_SECRET') private readonly jwtRefreshSecret: string,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<UserResponseDto> {
-    const user = await this.userService.getUserByEmail(email);
+  async validateUser(identifier: string, pass: string): Promise<UserResponseDto> {
+    const user = await this.userService.getUserByIdentifier(identifier);
     const isPasswordValid = await comparePassword(pass, user.password);
 
     if (!isPasswordValid) {
