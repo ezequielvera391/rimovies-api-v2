@@ -21,8 +21,10 @@ export class LoginDto {
     description: 'Password for login',
     example: 'password123',
     minLength: 6,
+    maxLength: 20,
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MaxLength(20, { message: 'Password cannot exceed 20 characters' })
   password: string;
 }

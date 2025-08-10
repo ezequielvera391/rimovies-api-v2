@@ -24,13 +24,15 @@ export class RegisterDto {
 
   @ApiProperty({
     description:
-      'Password for the account (minimum 6 characters, must contain at least one letter and one number)',
+      'Password for the account (minimum 6 characters, maximum 20 characters, must contain at least one letter and one number)',
     example: 'password123',
     minLength: 6,
+    maxLength: 20,
   })
   @IsNotEmpty({ message: 'Password is required' })
   @IsString({ message: 'Password must be a string' })
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MaxLength(20, { message: 'Password cannot exceed 20 characters' })
   @Matches(/^(?=.*[a-zA-Z])(?=.*\d)/, {
     message: 'Password must contain at least one letter and one number',
   })

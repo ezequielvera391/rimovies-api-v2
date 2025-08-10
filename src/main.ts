@@ -11,7 +11,7 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log'],
       bufferLogs: true,
     });
-    
+
     // TODO: Add personalization of cors
     app.enableCors();
 
