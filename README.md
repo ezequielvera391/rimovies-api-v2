@@ -30,6 +30,9 @@ Proyecto backend para Rimovies, una API construida en TypeScript con NestJS, Pos
 - **NestJS** como framework principal
 - **TypeORM** para manejo de base de datos
 - **PostgreSQL** como motor de base de datos relacional
+- **JWT (JSON Web Tokens)** para autenticación
+- **Passport.js** para estrategias de autenticación
+- **bcrypt** para hash de contraseñas
 
 ## Instalación local
 
@@ -155,6 +158,44 @@ rimovies-api/
 └── docker-compose.prod.yml # Configuración Docker (producción)
 ```
 
+## 🔐 Sistema de Autenticación
+
+Este proyecto implementa un sistema de autenticación robusto utilizando **JWT (JSON Web Tokens)** con las siguientes características:
+
+### **Arquitectura de Autenticación**
+
+- **Access Tokens**: Tokens de corta duración (15 minutos) para acceso a recursos protegidos
+- **Refresh Tokens**: Tokens de larga duración (7 días) para renovar access tokens
+- **Token Revocation**: Sistema de revocación de tokens para logout seguro
+- **JTI (JWT ID)**: Identificadores únicos para cada token para tracking y revocación
+
+### **Flujo de Autenticación**
+
+1. **Registro/Login** → Se generan access token y refresh token
+2. **Acceso a recursos** → Se valida el access token en cada request
+3. **Token expirado** → Se usa refresh token para generar nuevos tokens
+4. **Logout** → Se revoca el access token actual
+5. **Logout All** → Se revocan todos los tokens del usuario
+
+### **Seguridad Implementada**
+
+- **Hash de contraseñas** con bcrypt
+- **Tokens con expiración** automática
+- **Revocación inmediata** de tokens
+- **Validación de JTI** para prevenir replay attacks
+- **Guards de autenticación** en endpoints protegidos
+- **Cookies httpOnly** para refresh tokens
+
+### **Componentes del Sistema**
+
+- **JwtAuthGuard**: Protege rutas que requieren autenticación
+- **RefreshTokenGuard**: Valida refresh tokens para renovación
+- **TokenService**: Maneja creación, validación y revocación de tokens
+- **AuthService**: Orquesta el flujo de autenticación
+- **Passport Strategies**: JWT y Refresh Token strategies
+
+---
+
 ## Endpoints principales
 
 ### Autenticación
@@ -178,9 +219,29 @@ rimovies-api/
 - `pnpm test` — Ejecuta los tests
 - `pnpm migration:run` — Ejecuta las migraciones de TypeORM
 
-## Migraciones de base de datos
+## 🗄️ Base de Datos
+
+### **Estructura de Tablas**
+
+- **users**: Información de usuarios (email, username, password hash, role)
+- **access_tokens**: Tokens de acceso con JTI y expiración
+- **refresh_tokens**: Tokens de refresco con expiración extendida
+
+### **Relaciones**
+
+- Usuarios pueden tener múltiples tokens activos
+- Tokens se revocan automáticamente al hacer logout
+- Cascade delete para limpiar tokens cuando se elimina un usuario
+
+### **Migraciones**
 
 Las migraciones se encuentran en `src/database/migrations/` y se ejecutan automáticamente al iniciar la app si está configurado así.
+
+### **Índices de Rendimiento**
+
+- Tokens únicos para prevenir duplicados
+- Índices en userId + expiresAt para consultas eficientes
+- Índices en JTI para búsquedas rápidas de revocación
 
 ## Enlaces de interés
 
