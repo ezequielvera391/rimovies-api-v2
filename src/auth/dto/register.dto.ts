@@ -17,9 +17,11 @@ export class RegisterDto {
   @ApiProperty({
     description: 'Email address for the account',
     example: 'john@example.com',
+    maxLength: 255,
   })
   @IsNotEmpty({ message: 'Email is required' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @MaxLength(255, { message: 'Email cannot exceed 255 characters' })
   email: string;
 
   @ApiProperty({

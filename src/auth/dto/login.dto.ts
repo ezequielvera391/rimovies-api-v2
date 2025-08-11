@@ -6,12 +6,13 @@ export class LoginDto {
     description: 'Username or email address for login',
     example: 'john_doe or john@example.com',
     minLength: 5,
-    maxLength: 15,
+    maxLength: 255,
   })
   @IsNotEmpty({ message: 'Username or email is required' })
   @IsString({ message: 'Username or email must be a string' })
   @ValidateIf((o: LoginDto) => o.identifier.includes('@'))
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @MaxLength(255, { message: 'Email cannot exceed 255 characters' })
   @ValidateIf((o) => !o.identifier.includes('@'))
   @MinLength(5, { message: 'Username must be at least 5 characters long' })
   @MaxLength(15, { message: 'Username cannot exceed 15 characters' })
